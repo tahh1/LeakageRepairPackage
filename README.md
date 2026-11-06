@@ -16,6 +16,7 @@ The exact prompts are in `Experiments/E<n>/Experimental setup/Claude fix prompt.
 Original notebooks/              the 19 notebooks before any fix
 Original dockerfiles/<id>/       Dockerfile, requirements.txt and data for each notebook
 RECONSTRUCTION_CHANGE_AUDIT.md   changes needed to make the original notebooks run
+RULE_DERIVATION_EVIDENCE.md      where the E3 repair rules come from
 Experiments/
   detection_reports/<id>.json    detection reports given to the agent in E2 and E3
   E1/ E2/ E3/
