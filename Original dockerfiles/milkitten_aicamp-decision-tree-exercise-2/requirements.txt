@@ -1,0 +1,8 @@
+jupyterlab
+pandas
+numpy<2
+matplotlib==3.5.3
+matplotlib_inline==0.1.6
+seaborn==0.11.2
+scikit-learn
+graphviz

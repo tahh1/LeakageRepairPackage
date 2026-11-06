@@ -1,0 +1,8 @@
+.DS_Store
+.ipynb_checkpoints/
+
+# Data files over GitHub's 100 MB limit (see README, "Data files not included")
+Original dockerfiles/artgor_basic-eda/train.csv
+Original dockerfiles/artgor_basic-eda/test.csv
+Original dockerfiles/panamby_loan-default-prediction/train_v2.csv
+Original dockerfiles/nb_174/creditcard.csv

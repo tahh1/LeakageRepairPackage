@@ -1,0 +1,10 @@
+jupyterlab
+pandas
+numpy<2
+matplotlib==3.5.3
+matplotlib_inline==0.1.6
+seaborn==0.11.2
+plotly==3.10.0
+cufflinks==0.16.0
+lightgbm
+scikit-learn

@@ -1,0 +1,7 @@
+jupyterlab
+nbconvert
+ipykernel
+pandas<2
+numpy<2
+scikit-learn
+xgboost

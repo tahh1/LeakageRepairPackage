@@ -1,0 +1,38 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "44 HOUSING_PATH = '../input/kc_house_data.csv'\n47 housing = pd.read_csv(HOUSING_PATH)\n111 attributes = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors',\n    'waterfront', 'view', 'condition', 'grade', 'sqft_above',\n    'sqft_basement', 'yr_built', 'yr_renovated', 'zipcode', 'lat', 'long',\n    'sqft_living15', 'sqft_lot15']\n115 X = np.c_[housing[attributes]]\n116 y = np.c_[housing['price']]\n118 model = sklearn.linear_model.LinearRegression()\n119 model.fit(X, y)\n125 model.score(X, y)\n",
+            "model info": "[Training method: model.fit, Training line: 119]\n  [Testing method: model_0.score, Testing line: 125]",
+            "preproc_leakage_detected": false,
+            "preproc_leakage_lines": [],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 119,
+                    "explanation": "The model is trained on the entire dataset (X, y), without a separate train-test split."
+                },
+                {
+                    "line_number": 125,
+                    "explanation": "The same dataset (X, y) is used for evaluation, leading to overlap leakage."
+                }
+            ]
+        },
+        {
+            "snippet": "44 HOUSING_PATH = '../input/kc_house_data.csv'\n47 housing = pd.read_csv(HOUSING_PATH)\n111 attributes = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors',\n    'waterfront', 'view', 'condition', 'grade', 'sqft_above',\n    'sqft_basement', 'yr_built', 'yr_renovated', 'zipcode', 'lat', 'long',\n    'sqft_living15', 'sqft_lot15']\n115 X = np.c_[housing[attributes]]\n116 y = np.c_[housing['price']]\n118 model = sklearn.linear_model.LinearRegression()\n119 model.fit(X, y)\n131 y_predicted = model.predict(X)\n",
+            "model info": "[Training method: model.fit, Training line: 119]\n  [Testing method: model_0.predict, Testing line: 131]",
+            "preproc_leakage_detected": false,
+            "preproc_leakage_lines": [],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 119,
+                    "explanation": "The model is trained on the complete dataset (X, y) with no train-test split, meaning the training data is the full dataset."
+                },
+                {
+                    "line_number": 131,
+                    "explanation": "The model is evaluated using model.predict(X) on the same complete dataset used for training, leading to overlap leakage."
+                }
+            ]
+        }
+    ]
+}

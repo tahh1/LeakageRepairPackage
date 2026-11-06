@@ -1,0 +1,50 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "22 data = pd.read_csv('hypothyroid.data')\n28 data.columns = ['class', 'age', 'sex', 'on_thyroxine', 'query_on_thyroxine',\n    'on_antithyroid_medication', 'thyroid_surgery', 'query_hypothyroid',\n    'query_hyperthyroid', 'pregnant', 'sick', 'tumor', 'lithium', 'goitre',\n    'TSH_measured', 'TSH', 'T3_measured', 'T3', 'TT4_measured', 'TT4',\n    'T4U_measured', 'T4U', 'FTI_measured', 'FTI', 'TBG_measured', 'TBG']\n119 le = LabelEncoder()\n120 cols = ['class', 'sex', 'on_thyroxine', 'query_on_thyroxine',\n    'on_antithyroid_medication', 'thyroid_surgery', 'query_hypothyroid',\n    'query_hyperthyroid', 'pregnant', 'sick', 'tumor', 'lithium', 'goitre',\n    'TSH_measured', 'T3_measured', 'TT4_measured', 'T4U_measured',\n    'FTI_measured', 'TBG_measured']\n121 for i in cols:\n122 data[i] = data[i].astype(str)\n123 data[i] = le.fit_transform(data[i])\n126 cols1 = ['age', 'TSH', 'T3', 'TT4', 'T4U', 'FTI']\n128 for j in cols1:\n129 data[j] = data[j].astype(float)\n206 y = data.iloc[:, 0:1]\n207 x = data.iloc[:, 1:]\n233 xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.2,\n    random_state=42)\n242 model = LogisticRegressionCV(max_iter=1000, cv=10)\n243 model.fit(xtrain, ytrain)\n244 pred = model.predict(xtest)\n",
+            "model info": "[Training method: LogisticRegressionCV.fit, Training line: 243]\n  [Testing method: LogisticRegressionCV.predict, Testing line: 244]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 123,
+                    "explanation": "Label encoding is applied to the entire dataset for multiple columns before the train-test split, causing test data information to influence the encoding."
+                },
+                {
+                    "line_number": 243,
+                    "explanation": "The model is trained on data that has been preprocessed using label encodings derived from the full dataset, including the test set."
+                },
+                {
+                    "line_number": 244,
+                    "explanation": "The model is evaluated on test data that has been contaminated by the label encoding applied before the split."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "22 data = pd.read_csv('hypothyroid.data')\n28 data.columns = ['class', 'age', 'sex', 'on_thyroxine', 'query_on_thyroxine',\n    'on_antithyroid_medication', 'thyroid_surgery', 'query_hypothyroid',\n    'query_hyperthyroid', 'pregnant', 'sick', 'tumor', 'lithium', 'goitre',\n    'TSH_measured', 'TSH', 'T3_measured', 'T3', 'TT4_measured', 'TT4',\n    'T4U_measured', 'T4U', 'FTI_measured', 'FTI', 'TBG_measured', 'TBG']\n119 le = LabelEncoder()\n120 cols = ['class', 'sex', 'on_thyroxine', 'query_on_thyroxine',\n    'on_antithyroid_medication', 'thyroid_surgery', 'query_hypothyroid',\n    'query_hyperthyroid', 'pregnant', 'sick', 'tumor', 'lithium', 'goitre',\n    'TSH_measured', 'T3_measured', 'TT4_measured', 'T4U_measured',\n    'FTI_measured', 'TBG_measured']\n121 for i in cols:\n122 data[i] = data[i].astype(str)\n123 data[i] = le.fit_transform(data[i])\n126 cols1 = ['age', 'TSH', 'T3', 'TT4', 'T4U', 'FTI']\n128 for j in cols1:\n129 data[j] = data[j].astype(float)\n206 y = data.iloc[:, 0:1]\n207 x = data.iloc[:, 1:]\n233 xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.2,\n    random_state=42)\n242 model = LogisticRegressionCV(max_iter=1000, cv=10)\n243 model.fit(xtrain, ytrain)\n244 pred = model.predict(xtest)\n251 model.score(xtest, pred)\n",
+            "model info": "[Training method: LogisticRegressionCV.fit, Training line: 243]\n  [Testing method: LogisticRegressionCV.score, Testing line: 251]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 123,
+                    "explanation": "LabelEncoder is fit and applied to the entire dataset before the train-test split, allowing information from the test set to influence the encoding."
+                },
+                {
+                    "line_number": 233,
+                    "explanation": "The train-test split occurs after the dataset has been contaminated by the label encoding."
+                },
+                {
+                    "line_number": 243,
+                    "explanation": "The LogisticRegressionCV model is trained on the data that has been preprocessed using label encoding applied to both train and test portions."
+                },
+                {
+                    "line_number": 251,
+                    "explanation": "The model is evaluated on the contaminated test data, which has been affected by the preprocessing leakage."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

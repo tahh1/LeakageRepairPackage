@@ -1,0 +1,51 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "9 names = [x for x in range(0, 7)]\n10 df = pd.read_csv('car.data', names=names)\n25 df_Y = df[6]\n33 df_X = df.drop(6, axis=1)\n48 X = OneHotEncoder().fit_transform(df_X).toarray()\n53 y = LabelEncoder().fit_transform(df_Y)\n56 y = y.ravel()\n71 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3,\n    random_state=42)\n86 svm_clf = svm.LinearSVC()\n87 svm_clf.fit(x_train, y_train)\n111 y_pred = svm_clf.predict(x_test)\n",
+            "model info": "[Training method: LinearSVC.fit, Training line: 87]\n  [Testing method: LinearSVC.predict, Testing line: 111]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 48,
+                    "explanation": "OneHotEncoder is fit on the entire feature set (df_X) before the train-test split, causing the encoder to incorporate information from what becomes the test set."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "9 names = [x for x in range(0, 7)]\n10 df = pd.read_csv('car.data', names=names)\n25 df_Y = df[6]\n33 df_X = df.drop(6, axis=1)\n48 X = OneHotEncoder().fit_transform(df_X).toarray()\n53 y = LabelEncoder().fit_transform(df_Y)\n56 y = y.ravel()\n71 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3,\n    random_state=42)\n92 knn_clf = KNeighborsClassifier(n_neighbors=3)\n93 knn_clf.fit(x_train, y_train)\n107 y_pred = knn_clf.predict(x_test)\n",
+            "model info": "[Training method: KNeighborsClassifier.fit, Training line: 93]\n  [Testing method: knn_clf_0.predict, Testing line: 107]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 48,
+                    "explanation": "OneHotEncoder is fit on the entire feature set (df_X) before the train-test split, meaning the encoding is influenced by the full dataset including the eventual test data."
+                },
+                {
+                    "line_number": 93,
+                    "explanation": "The KNeighborsClassifier is trained on data that has been preprocessed with an encoder that incorporated test set information."
+                },
+                {
+                    "line_number": 107,
+                    "explanation": "The model is evaluated on test data that was transformed using information derived from the entire dataset, leading to preprocessing leakage."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "9 names = [x for x in range(0, 7)]\n10 df = pd.read_csv('car.data', names=names)\n25 df_Y = df[6]\n33 df_X = df.drop(6, axis=1)\n48 X = OneHotEncoder().fit_transform(df_X).toarray()\n53 y = LabelEncoder().fit_transform(df_Y)\n56 y = y.ravel()\n71 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3,\n    random_state=42)\n98 mlp_clf = MLPClassifier(random_state=1, max_iter=300)\n99 mlp_clf.fit(x_train, y_train)\n109 y_pred = mlp_clf.predict(x_test)\n",
+            "model info": "[Training method: MLPClassifier.fit, Training line: 99]\n  [Testing method: MLPClassifier.predict, Testing line: 109]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 48,
+                    "explanation": "OneHotEncoder is fit on the entire feature set (df_X) before the train-test split, causing information from the test data to influence the feature transformation."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

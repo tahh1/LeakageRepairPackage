@@ -1,0 +1,50 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "19 iris_df = pd.read_csv('../input/iris/Iris.csv')\n32 iris_df = pd.get_dummies(iris_df, columns=['Species'])\n41 X = iris_df.values[:, 1:5]\n42 y = iris_df.values[:, 5:8]\n48 def normalize(array):\n49 arr_min = array.min(axis=(0, 1))\n50 arr_max = array.max(axis=(0, 1))\n51 return (array - arr_min) / (arr_max - arr_min)\n57 X = normalize(X)\n66 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1,\n    random_state=42)\n82 def create_network():\n83 model = Sequential()\n84 model.add(Dense(7, input_shape=(4,), activation='relu'))\n85 model.add(Dense(8, activation='relu'))\n86 model.add(Dense(5, activation='relu'))\n87 model.add(Dense(3, activation='softmax'))\n90 return model\n96 model = create_network()\n102 results = model.fit(X_train, y_train, epochs=10, batch_size=8,\n    validation_data=(X_test, y_test))\n",
+            "model info": "[Training method: model_0.fit, Training line: 102]\n  [Testing method: model_0.fit, Testing line: 102]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 57,
+                    "explanation": "Normalization is applied on the entire dataset before the train-test split, causing test data statistics to influence the scaling used for training."
+                },
+                {
+                    "line_number": 66,
+                    "explanation": "The train-test split occurs after the contaminated normalization, leading to preprocessing leakage in the evaluation data."
+                },
+                {
+                    "line_number": 102,
+                    "explanation": "The model is trained with the contaminated training data and validated with the contaminated test data in the same fit call."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "19 iris_df = pd.read_csv('../input/iris/Iris.csv')\n32 iris_df = pd.get_dummies(iris_df, columns=['Species'])\n41 X = iris_df.values[:, 1:5]\n42 y = iris_df.values[:, 5:8]\n48 def normalize(array):\n49 arr_min = array.min(axis=(0, 1))\n50 arr_max = array.max(axis=(0, 1))\n51 return (array - arr_min) / (arr_max - arr_min)\n57 X = normalize(X)\n66 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1,\n    random_state=42)\n82 def create_network():\n83 model = Sequential()\n84 model.add(Dense(7, input_shape=(4,), activation='relu'))\n85 model.add(Dense(8, activation='relu'))\n86 model.add(Dense(5, activation='relu'))\n87 model.add(Dense(3, activation='softmax'))\n90 return model\n96 model = create_network()\n102 results = model.fit(X_train, y_train, epochs=10, batch_size=8,\n    validation_data=(X_test, y_test))\n121 model.predict(X_test[:5])\n",
+            "model info": "[Training method: model_0.fit, Training line: 102]\n  [Testing method: model_1.predict, Testing line: 121]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 32,
+                    "explanation": "The dummy encoding is performed on the full dataset before splitting, which may cause information about test set categories to leak into the training set."
+                },
+                {
+                    "line_number": 57,
+                    "explanation": "Normalization is applied on the entire dataset (using global min and max) before the train-test split, allowing test set statistics to influence training."
+                },
+                {
+                    "line_number": 102,
+                    "explanation": "The model is trained on the already contaminated training data."
+                },
+                {
+                    "line_number": 121,
+                    "explanation": "The model is evaluated on the test set which has been influenced by preprocessing applied on the full dataset."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

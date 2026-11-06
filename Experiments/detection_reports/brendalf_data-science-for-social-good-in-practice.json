@@ -1,0 +1,59 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "58 df_train = pd.read_csv('../input/udacity-mlcharity-competition/census.csv')\n179 df_train.income = df_train.income.replace(to_replace=['<=50K', '>50K'],\n    value=[0, 1])\n465 numerical = ['age', 'education-num', 'capital-gain', 'capital-loss',\n    'hours-per-week']\n500 df_train = pd.get_dummies(data=df_train)\n520 X_train, X_test, y_train, y_test = train_test_split(df_train.drop('income',\n    axis=1), df_train.income, test_size=0.3, random_state=0)\n544 scaler = MinMaxScaler()\n546 X_train[numerical] = scaler.fit_transform(X_train[numerical])\n716 scorer = make_scorer(roc_auc_score)\n717 grid_obj = GridSearchCV(estimator=XGBClassifier(random_state=42),\n    param_grid=parameters, scoring=scorer, cv=5)\n718 grid_fit = grid_obj.fit(X_train, y_train)\n",
+            "model info": "[Training method: GridSearchCV.fit, Training line: 718]\n  [Testing method: GridSearchCV.fit, Testing line: 718]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 500,
+                    "explanation": "One-hot encoding (get_dummies) is applied on the full dataset before the train-test split, causing test information (e.g., category levels) to influence the transformation and leak into the training process."
+                },
+                {
+                    "line_number": 520,
+                    "explanation": "The train-test split occurs after the full dataset has been transformed, so the training data inherits information from the entire dataset including what should have been reserved for evaluation."
+                },
+                {
+                    "line_number": 718,
+                    "explanation": "GridSearchCV.fit is used on the contaminated training data, resulting in evaluation on data that was preprocessed with information from the test set."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "58 df_train = pd.read_csv('../input/udacity-mlcharity-competition/census.csv')\n179 df_train.income = df_train.income.replace(to_replace=['<=50K', '>50K'],\n    value=[0, 1])\n465 numerical = ['age', 'education-num', 'capital-gain', 'capital-loss',\n    'hours-per-week']\n500 df_train = pd.get_dummies(data=df_train)\n520 X_train, X_test, y_train, y_test = train_test_split(df_train.drop('income',\n    axis=1), df_train.income, test_size=0.3, random_state=0)\n544 scaler = MinMaxScaler()\n546 X_train[numerical] = scaler.fit_transform(X_train[numerical])\n547 X_test[numerical] = scaler.transform(X_test[numerical])\n716 scorer = make_scorer(roc_auc_score)\n717 grid_obj = GridSearchCV(estimator=XGBClassifier(random_state=42),\n    param_grid=parameters, scoring=scorer, cv=5)\n718 grid_fit = grid_obj.fit(X_train, y_train)\n719 best_model = grid_fit.best_estimator_\n727 best_predictions = best_model.predict(X_test)\n",
+            "model info": "[Training method: GridSearchCV.fit, Training line: 718]\n  [Testing method: Unknown | Any.predict, Testing line: 727]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 500,
+                    "explanation": "Dummy variable encoding (via pd.get_dummies) is applied to the entire dataset before the train-test split, causing the encoding to be influenced by categories present in the test data."
+                },
+                {
+                    "line_number": 520,
+                    "explanation": "The train-test split occurs after the encoding, so the test data characteristics have already influenced feature creation for training."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "58 df_train = pd.read_csv('../input/udacity-mlcharity-competition/census.csv')\n179 df_train.income = df_train.income.replace(to_replace=['<=50K', '>50K'],\n    value=[0, 1])\n465 numerical = ['age', 'education-num', 'capital-gain', 'capital-loss',\n    'hours-per-week']\n500 df_train = pd.get_dummies(data=df_train)\n520 X_train, X_test, y_train, y_test = train_test_split(df_train.drop('income',\n    axis=1), df_train.income, test_size=0.3, random_state=0)\n544 scaler = MinMaxScaler()\n546 X_train[numerical] = scaler.fit_transform(X_train[numerical])\n547 X_test[numerical] = scaler.transform(X_test[numerical])\n716 scorer = make_scorer(roc_auc_score)\n717 grid_obj = GridSearchCV(estimator=XGBClassifier(random_state=42),\n    param_grid=parameters, scoring=scorer, cv=5)\n718 grid_fit = grid_obj.fit(X_train, y_train)\n719 best_model = grid_fit.best_estimator_\n734 print('Final ROC/AUC on the testing data: {:.4f}'.format(roc_auc_score(\n    y_test, best_model.predict_proba(X_test)[:, (1)])))\n",
+            "model info": "[Training method: GridSearchCV.fit, Training line: 718]\n  [Testing method: Unknown | Any.predict_proba, Testing line: 734]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 500,
+                    "explanation": "Dummy encoding is applied on the entire dataset before the train-test split, so test data categories influence the encoded features used during training."
+                },
+                {
+                    "line_number": 520,
+                    "explanation": "The contaminated dataset is then split into training and test sets, propagating the leakage into the training process used by GridSearchCV."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

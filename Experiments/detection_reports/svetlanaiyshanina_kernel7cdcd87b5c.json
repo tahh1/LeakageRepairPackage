@@ -1,0 +1,38 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "34 wine_data = load_wine()\n40 data = pd.DataFrame(wine_data['data'], columns=wine_data['feature_names'])\n41 data['Target'] = wine_data['target']\n59 x = data.drop('Target', axis=1)\n60 y = data['Target']\n66 clf = DecisionTreeClassifier(random_state=42)\n72 clf.fit(x, y)\n78 print(clf.predict([x.loc[90]]))\n",
+            "model info": "[Training method: DecisionTreeClassifier.fit, Training line: 72]\n  [Testing method: DecisionTreeClassifier.predict, Testing line: 78]",
+            "preproc_leakage_detected": false,
+            "preproc_leakage_lines": [],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 72,
+                    "explanation": "The model is trained on the entire dataset without splitting, meaning no separation between training and evaluation data."
+                },
+                {
+                    "line_number": 78,
+                    "explanation": "The prediction is performed on a data point from the same dataset used for training, resulting in overlap leakage."
+                }
+            ]
+        },
+        {
+            "snippet": "34 wine_data = load_wine()\n40 data = pd.DataFrame(wine_data['data'], columns=wine_data['feature_names'])\n41 data['Target'] = wine_data['target']\n59 x = data.drop('Target', axis=1)\n60 y = data['Target']\n111 skl = StandardScaler()\n112 skl.fit(x)\n113 x_scaled = skl.transform(x)\n163 knn = KNeighborsClassifier(n_neighbors=29)\n171 knn.fit(x_scaled, y)\n172 knn.predict([x_scaled[98]])\n",
+            "model info": "[Training method: KNeighborsClassifier.fit, Training line: 171]\n  [Testing method: knn_1.predict, Testing line: 172]",
+            "preproc_leakage_detected": false,
+            "preproc_leakage_lines": [],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 171,
+                    "explanation": "The KNeighborsClassifier is fitted on the entire scaled dataset, with no train-test split."
+                },
+                {
+                    "line_number": 172,
+                    "explanation": "The prediction is made on a sample (x_scaled[98]) that is part of the training data, causing overlap leakage."
+                }
+            ]
+        }
+    ]
+}

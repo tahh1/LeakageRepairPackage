@@ -1,0 +1,41 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "22 df = pd.read_csv('weatherAUS.csv')\n35 df = df.drop(['Evaporation', 'Sunshine', 'Cloud9am', 'Cloud3pm', 'Location',\n    'Date'], axis=1)\n51 df = df.dropna(axis=0)\n59 le = LabelEncoder()\n60 df['WindGustDir'] = le.fit_transform(df['WindGustDir'])\n61 df['WindDir9am'] = le.fit_transform(df['WindDir9am'])\n62 df['WindDir3pm'] = le.fit_transform(df['WindDir3pm'])\n63 df['RainToday'] = le.fit_transform(df['RainToday'])\n64 df['RainTomorrow'] = le.fit_transform(df['RainTomorrow'])\n70 x = df.drop(['RainTomorrow'], axis=1)\n71 y = df['RainTomorrow']\n78 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)\n93 dt = DecisionTreeClassifier()\n95 dt.fit(x_train, y_train)\n96 predictions = dt.predict(x_test)\n",
+            "model info": "[Training method: DecisionTreeClassifier.fit, Training line: 95]\n  [Testing method: DecisionTreeClassifier.predict, Testing line: 96]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 60,
+                    "explanation": "LabelEncoder is applied to 'WindGustDir' on the full dataset before the train-test split, causing the encoding to be influenced by test data."
+                },
+                {
+                    "line_number": 61,
+                    "explanation": "LabelEncoder is applied to 'WindDir9am' on the full dataset before the train-test split, causing the encoding to be influenced by test data."
+                },
+                {
+                    "line_number": 62,
+                    "explanation": "LabelEncoder is applied to 'WindDir3pm' on the full dataset before the train-test split, causing the encoding to be influenced by test data."
+                },
+                {
+                    "line_number": 63,
+                    "explanation": "LabelEncoder is applied to 'RainToday' on the full dataset before the train-test split, causing the encoding to be influenced by test data."
+                },
+                {
+                    "line_number": 64,
+                    "explanation": "LabelEncoder is applied to 'RainTomorrow' (the target variable) on the full dataset before the train-test split, potentially leaking target distribution from the test set into training."
+                },
+                {
+                    "line_number": 95,
+                    "explanation": "The DecisionTreeClassifier is trained on data that has been preprocessed with leakage from the test data."
+                },
+                {
+                    "line_number": 96,
+                    "explanation": "The model makes predictions on test data that has been contaminated by the earlier full-dataset transformations."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

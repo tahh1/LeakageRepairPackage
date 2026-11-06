@@ -1,0 +1,79 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "53 data = pd.read_csv('../input/train_v2.csv')\n130 data.fillna(data.mean(), inplace=True)\n223 def remove_collinear_features(x, threshold):\n238 y = x['loss']\n239 x = x.drop(columns=['loss'])\n242 corr_matrix = x.corr()\n243 iters = list(range(len(corr_matrix.columns) - 1))\n244 drop_cols = []\n247 for i in iters:\n248 for j in range(i):\n249 item = corr_matrix.iloc[j:j + 1, i + 1:i + 2]\n250 col = item.columns\n252 val = abs(item.values)\n255 if val >= threshold:\n258 drop_cols.append(col.values[0])\n261 drops = set(drop_cols)\n262 x = x.drop(columns=drops)\n265 x['loss'] = y\n267 return x\n274 data = remove_collinear_features(data, 0.6)\n289 features = data.drop(columns='loss')\n290 targets = pd.DataFrame(data['loss'])\n293 X_train, X_test, y_train, y_test = train_test_split(features, targets,\n    test_size=0.2, random_state=42)\n306 sc = StandardScaler()\n307 X_train = sc.fit_transform(X_train)\n308 X_test = sc.transform(X_test)\n315 y_train = np.array(y_train).reshape((-1,))\n352 def fit_and_evaluate(model):\n355 model.fit(X_train, y_train)\n358 model_pred = model.predict(X_test)\n370 naive = GaussianNB()\n371 naive_cross = fit_and_evaluate(naive)\n",
+            "model info": "[Training method: model_0.fit, Training line: 355]\n  [Testing method: model_1.predict, Testing line: 358]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 130,
+                    "explanation": "Imputation is applied on the entire dataset using global mean, leaking test set information into training."
+                },
+                {
+                    "line_number": 274,
+                    "explanation": "Collinearity-based feature removal is computed on the full dataset before splitting, introducing information from the test set into the training process."
+                },
+                {
+                    "line_number": 355,
+                    "explanation": "The model is trained on data that has been preprocessed using statistics from the entire dataset, causing leakage."
+                },
+                {
+                    "line_number": 358,
+                    "explanation": "The model is evaluated on test data that has been derived from global preprocessing, meaning the test data influenced the training data transformation."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "53 data = pd.read_csv('../input/train_v2.csv')\n130 data.fillna(data.mean(), inplace=True)\n223 def remove_collinear_features(x, threshold):\n238 y = x['loss']\n239 x = x.drop(columns=['loss'])\n242 corr_matrix = x.corr()\n243 iters = list(range(len(corr_matrix.columns) - 1))\n244 drop_cols = []\n247 for i in iters:\n248 for j in range(i):\n249 item = corr_matrix.iloc[j:j + 1, i + 1:i + 2]\n250 col = item.columns\n252 val = abs(item.values)\n255 if val >= threshold:\n258 drop_cols.append(col.values[0])\n261 drops = set(drop_cols)\n262 x = x.drop(columns=drops)\n265 x['loss'] = y\n267 return x\n274 data = remove_collinear_features(data, 0.6)\n289 features = data.drop(columns='loss')\n290 targets = pd.DataFrame(data['loss'])\n293 X_train, X_test, y_train, y_test = train_test_split(features, targets,\n    test_size=0.2, random_state=42)\n306 sc = StandardScaler()\n307 X_train = sc.fit_transform(X_train)\n308 X_test = sc.transform(X_test)\n315 y_train = np.array(y_train).reshape((-1,))\n352 def fit_and_evaluate(model):\n355 model.fit(X_train, y_train)\n358 model_pred = model.predict(X_test)\n381 random = RandomForestClassifier(n_estimators=10, criterion='entropy')\n382 random_cross = fit_and_evaluate(random)\n",
+            "model info": "[Training method: model_0.fit, Training line: 355]\n  [Testing method: model_1.predict, Testing line: 358]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 130,
+                    "explanation": "Missing value imputation is applied on the entire dataset before splitting, meaning the mean is computed using both training and test data."
+                },
+                {
+                    "line_number": 274,
+                    "explanation": "The remove_collinear_features transformation, which computes correlations on the entire dataset, is applied before the train-test split, thereby leaking test information into feature selection."
+                },
+                {
+                    "line_number": 355,
+                    "explanation": "The model is trained on data that has been preprocessed using statistics from the full dataset, leading to leakage."
+                },
+                {
+                    "line_number": 358,
+                    "explanation": "The model is subsequently evaluated on test data that has been contaminated by the earlier full-dataset preprocessing steps."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "53 data = pd.read_csv('../input/train_v2.csv')\n130 data.fillna(data.mean(), inplace=True)\n223 def remove_collinear_features(x, threshold):\n238 y = x['loss']\n239 x = x.drop(columns=['loss'])\n242 corr_matrix = x.corr()\n243 iters = list(range(len(corr_matrix.columns) - 1))\n244 drop_cols = []\n247 for i in iters:\n248 for j in range(i):\n249 item = corr_matrix.iloc[j:j + 1, i + 1:i + 2]\n250 col = item.columns\n252 val = abs(item.values)\n255 if val >= threshold:\n258 drop_cols.append(col.values[0])\n261 drops = set(drop_cols)\n262 x = x.drop(columns=drops)\n265 x['loss'] = y\n267 return x\n274 data = remove_collinear_features(data, 0.6)\n289 features = data.drop(columns='loss')\n290 targets = pd.DataFrame(data['loss'])\n293 X_train, X_test, y_train, y_test = train_test_split(features, targets,\n    test_size=0.2, random_state=42)\n306 sc = StandardScaler()\n307 X_train = sc.fit_transform(X_train)\n308 X_test = sc.transform(X_test)\n315 y_train = np.array(y_train).reshape((-1,))\n352 def fit_and_evaluate(model):\n355 model.fit(X_train, y_train)\n358 model_pred = model.predict(X_test)\n392 gb = XGBClassifier()\n393 gb_cross = fit_and_evaluate(gb)\n",
+            "model info": "[Training method: model_0.fit, Training line: 355]\n  [Testing method: model_1.predict, Testing line: 358]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 130,
+                    "explanation": "Imputation is applied on the entire dataset using the overall mean, which includes test data information before the train-test split."
+                },
+                {
+                    "line_number": 274,
+                    "explanation": "The removal of collinear features is performed on the full dataset, thereby leaking test data information into feature selection."
+                },
+                {
+                    "line_number": 355,
+                    "explanation": "The model is trained on data that has been preprocessed using transformations (imputation and feature selection) applied to the entire dataset."
+                },
+                {
+                    "line_number": 358,
+                    "explanation": "The model is evaluated on test data which have been subject to the same contaminated preprocessing steps."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

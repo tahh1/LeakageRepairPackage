@@ -1,0 +1,33 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "27 diabetes_data_file_path = os.path.join('input', 'Churn_Modelling.csv')\n28 dataset = pd.read_csv(diabetes_data_file_path)\n36 features = ['CreditScore', 'Geography', 'Gender', 'Age', 'Tenure',\n    'Balance', 'NumOfProducts', 'HasCrCard', 'IsActiveMember',\n    'EstimatedSalary']\n41 X = dataset[features]\n42 y = dataset.Exited\n50 le = LabelEncoder()\n51 X.Gender = le.fit_transform(X.Gender)\n53 ct = ColumnTransformer([('my_OHE', OneHotEncoder(), [1])], remainder=\n    'passthrough')\n54 X = ct.fit_transform(X)\n56 X = X[:, 1:]\n59 train_X, val_X, train_y, val_y = train_test_split(X, y, test_size=0.2,\n    random_state=0)\n62 sc = StandardScaler()\n63 train_X = sc.fit_transform(train_X)\n64 val_X = sc.transform(val_X)\n72 model = Sequential()\n78 model.add(Dense(units=6, kernel_initializer='uniform', activation='relu',\n    input_dim=11))\n79 model.add(Dense(units=6, kernel_initializer='uniform', activation='relu'))\n80 model.add(Dense(units=1, kernel_initializer='uniform', activation='sigmoid'))\n86 model.fit(train_X, train_y, batch_size=10, epochs=10)\n93 val_predictions = model.predict(val_X)\n",
+            "model info": "[Training method: model.fit, Training line: 86]\n  [Testing method: model_0.predict, Testing line: 93]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 51,
+                    "explanation": "LabelEncoder is fit on 'Gender' for the entire dataset before the train-test split, so the encoding is influenced by test data."
+                },
+                {
+                    "line_number": 54,
+                    "explanation": "The ColumnTransformer with OneHotEncoder is applied on the full dataset prior to splitting, incorporating test data information into the transformation."
+                },
+                {
+                    "line_number": 59,
+                    "explanation": "Train-test split is performed after the full dataset has been preprocessed, meaning the training data is contaminated with information from the test set."
+                },
+                {
+                    "line_number": 86,
+                    "explanation": "Model is trained on data that has been preprocessed using information from the entire dataset, including the test set."
+                },
+                {
+                    "line_number": 93,
+                    "explanation": "Model evaluation on the test set uses data that was transformed with leakage from the test data."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

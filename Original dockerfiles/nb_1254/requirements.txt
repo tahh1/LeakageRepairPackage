@@ -1,0 +1,7 @@
+jupyterlab
+pandas
+numpy<2
+scikit-learn
+matplotlib
+tensorflow==2.15.0
+keras==2.15.0

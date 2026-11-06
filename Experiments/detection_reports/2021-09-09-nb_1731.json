@@ -1,0 +1,21 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "36 path_features_train = 'Pickles/features_train.pickle'\n37 with open(path_features_train, 'rb') as data:\n38 features_train = pickle.load(data)\n41 path_labels_train = 'Pickles/labels_train.pickle'\n42 with open(path_labels_train, 'rb') as data:\n43 labels_train = pickle.load(data)\n70 mnbc = MultinomialNB()\n79 mnbc.fit(features_train, labels_train)\n95 print(accuracy_score(labels_train, mnbc.predict(features_train)))\n",
+            "model info": "[Training method: MultinomialNB.fit, Training line: 79]\n  [Testing method: MultinomialNB.predict, Testing line: 95]",
+            "preproc_leakage_detected": false,
+            "preproc_leakage_lines": [],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 79,
+                    "explanation": "The model is trained on 'features_train' and 'labels_train', which are later reused for evaluation."
+                },
+                {
+                    "line_number": 95,
+                    "explanation": "The same training set is used for prediction, causing overlap leakage."
+                }
+            ]
+        }
+    ]
+}

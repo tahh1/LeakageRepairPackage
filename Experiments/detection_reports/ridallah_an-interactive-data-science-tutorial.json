@@ -1,0 +1,83 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "186 train = pd.read_csv('../input/train.csv')\n187 test = pd.read_csv('../input/test.csv')\n189 full = train.append(test, ignore_index=True)\n190 titanic = full[:891]\n347 sex = pd.Series(np.where(full.Sex == 'male', 1, 0), name='Sex')\n354 embarked = pd.get_dummies(full.Embarked, prefix='Embarked')\n375 imputed = pd.DataFrame()\n378 imputed['Age'] = full.Age.fillna(full.Age.mean())\n381 imputed['Fare'] = full.Fare.fillna(full.Fare.mean())\n439 cabin = pd.DataFrame()\n442 cabin['Cabin'] = full.Cabin.fillna('U')\n445 cabin['Cabin'] = cabin['Cabin'].map(lambda c: c[0])\n448 cabin = pd.get_dummies(cabin['Cabin'], prefix='Cabin')\n526 full_X = pd.concat([imputed, embarked, cabin, sex], axis=1)\n539 train_valid_X = full_X[0:891]\n540 train_valid_y = titanic.Survived\n542 train_X, valid_X, train_y, valid_y = train_test_split(train_valid_X,\n    train_valid_y, train_size=0.7)\n618 model = LogisticRegression()\n629 model.fit(train_X, train_y)\n646 print((model.score(train_X, train_y), model.score(valid_X, valid_y)))\n",
+            "model info": "[Training method: LogisticRegression.fit, Training line: 629]\n  [Testing method: LogisticRegression.score, Testing line: 646]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 189,
+                    "explanation": "The train and test datasets are concatenated into 'full', allowing test data to influence subsequent feature engineering steps."
+                },
+                {
+                    "line_number": 378,
+                    "explanation": "Imputation for 'Age' is performed on the full dataset, so the mean is computed using information from the test set."
+                },
+                {
+                    "line_number": 381,
+                    "explanation": "Imputation for 'Fare' is performed on the full dataset, incorporating test data statistics."
+                },
+                {
+                    "line_number": 354,
+                    "explanation": "Dummy encoding for 'Embarked' is applied to the full dataset, allowing test data categories to affect the encoding used for training."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "186 train = pd.read_csv('../input/train.csv')\n187 test = pd.read_csv('../input/test.csv')\n189 full = train.append(test, ignore_index=True)\n190 titanic = full[:891]\n347 sex = pd.Series(np.where(full.Sex == 'male', 1, 0), name='Sex')\n354 embarked = pd.get_dummies(full.Embarked, prefix='Embarked')\n375 imputed = pd.DataFrame()\n378 imputed['Age'] = full.Age.fillna(full.Age.mean())\n381 imputed['Fare'] = full.Fare.fillna(full.Fare.mean())\n439 cabin = pd.DataFrame()\n442 cabin['Cabin'] = full.Cabin.fillna('U')\n445 cabin['Cabin'] = cabin['Cabin'].map(lambda c: c[0])\n448 cabin = pd.get_dummies(cabin['Cabin'], prefix='Cabin')\n526 full_X = pd.concat([imputed, embarked, cabin, sex], axis=1)\n539 train_valid_X = full_X[0:891]\n540 train_valid_y = titanic.Survived\n542 train_X, valid_X, train_y, valid_y = train_test_split(train_valid_X,\n    train_valid_y, train_size=0.7)\n618 model = LogisticRegression()\n629 model.fit(train_X, train_y)\n646 print((model.score(train_X, train_y), model.score(valid_X, valid_y)))\n",
+            "model info": "[Training method: LogisticRegression.fit, Training line: 629]\n  [Testing method: LogisticRegression.score, Testing line: 646]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 189,
+                    "explanation": "The training and test datasets are merged, so subsequent transformations use information from the test set."
+                },
+                {
+                    "line_number": 378,
+                    "explanation": "Imputation of 'Age' is performed on the full dataset (including the test data), leaking test set statistics into training."
+                },
+                {
+                    "line_number": 381,
+                    "explanation": "Imputation of 'Fare' is performed on the full dataset (including the test data), leaking test set statistics into training."
+                },
+                {
+                    "line_number": 526,
+                    "explanation": "The final feature matrix is built from data that has been transformed using full dataset information, contaminating the training data."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "186 train = pd.read_csv('../input/train.csv')\n187 test = pd.read_csv('../input/test.csv')\n189 full = train.append(test, ignore_index=True)\n190 titanic = full[:891]\n347 sex = pd.Series(np.where(full.Sex == 'male', 1, 0), name='Sex')\n354 embarked = pd.get_dummies(full.Embarked, prefix='Embarked')\n375 imputed = pd.DataFrame()\n378 imputed['Age'] = full.Age.fillna(full.Age.mean())\n381 imputed['Fare'] = full.Fare.fillna(full.Fare.mean())\n439 cabin = pd.DataFrame()\n442 cabin['Cabin'] = full.Cabin.fillna('U')\n445 cabin['Cabin'] = cabin['Cabin'].map(lambda c: c[0])\n448 cabin = pd.get_dummies(cabin['Cabin'], prefix='Cabin')\n526 full_X = pd.concat([imputed, embarked, cabin, sex], axis=1)\n539 train_valid_X = full_X[0:891]\n540 train_valid_y = titanic.Survived\n541 test_X = full_X[891:]\n542 train_X, valid_X, train_y, valid_y = train_test_split(train_valid_X,\n    train_valid_y, train_size=0.7)\n618 model = LogisticRegression()\n629 model.fit(train_X, train_y)\n705 test_Y = model.predict(test_X)\n",
+            "model info": "[Training method: LogisticRegression.fit, Training line: 629]\n  [Testing method: LogisticRegression.predict, Testing line: 705]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 189,
+                    "explanation": "Train and test data are concatenated into a single DataFrame, so preprocessing is performed on the full dataset including the test set."
+                },
+                {
+                    "line_number": 347,
+                    "explanation": "Feature transformations (e.g., encoding of 'Sex' and 'Embarked', imputation of 'Age' and 'Fare', and dummy creation for 'Cabin') are applied to the full dataset, leveraging statistics and categories from the test set."
+                },
+                {
+                    "line_number": 526,
+                    "explanation": "The features for both train and test (full_X) are created using data from the entire dataset, contaminating the train set with test data information."
+                },
+                {
+                    "line_number": 629,
+                    "explanation": "The model is trained on train_X which is transformed with test data influence."
+                },
+                {
+                    "line_number": 705,
+                    "explanation": "The evaluation uses test_X that has been preprocessed using leaked statistics from the test set."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

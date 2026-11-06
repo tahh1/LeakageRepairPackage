@@ -1,0 +1,29 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "10 df = pd.read_csv('bank.csv', sep=';')\n25 df_Y = df['y']\n33 df_X = df.drop('y', axis=1)\n48 X = OneHotEncoder().fit_transform(df_X).toarray()\n52 y = LabelBinarizer().fit_transform(df_Y)\n54 y = y.ravel()\n62 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3,\n    random_state=42)\n89 mlp_clf = MLPClassifier(random_state=1, max_iter=300)\n90 mlp_clf.fit(x_train, y_train)\n98 y_pred = mlp_clf.predict(x_test)\n",
+            "model info": "[Training method: MLPClassifier.fit, Training line: 90]\n  [Testing method: MLPClassifier.predict, Testing line: 98]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 48,
+                    "explanation": "OneHotEncoder is fit on the entire dataset before splitting, causing leakage from the test data into the training set."
+                },
+                {
+                    "line_number": 62,
+                    "explanation": "The train-test split is applied after the data has been encoded, meaning the encoding step has already incorporated information from the upcoming test set."
+                },
+                {
+                    "line_number": 90,
+                    "explanation": "The MLPClassifier is trained on the contaminated training data."
+                },
+                {
+                    "line_number": 98,
+                    "explanation": "The model is evaluated on test data that was encoded with information from the entire dataset."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

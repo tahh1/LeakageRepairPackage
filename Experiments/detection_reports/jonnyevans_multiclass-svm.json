@@ -1,0 +1,46 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "20 train = pd.read_csv('../input/train.csv')\n22 X = train.values[:, 1:]\n23 Y = train.ix[:, (0)]\n36 n = len(Y)\n39 random_indexes = np.random.randint(0, high=n, size=10000)\n40 X = np.vstack((X, np.zeros((10000, X.shape[1]))))\n41 Y = np.concatenate([Y, np.zeros(10000)])\n43 for ind in random_indexes:  \n44 img = X[(ind), :].reshape(28, 28)\n45 angle = np.random.randint(-30, 30)\n46 img_rot = rotate(img, angle)\n47 X[(n), :] = img_rot.reshape(1, 784)\n48 Y[n] = Y[ind]\n56 X = preprocessing.scale(X)\n68 pca = decomposition.PCA(n_components=0.8, whiten=True)\n69 X = pca.fit_transform(X)\n78 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, random_state=7,\n    test_size=0.3)\n81 classifier = svm.SVC()\n82 classifier.fit(X_train, Y_train)\n83 score = classifier.score(X_test, Y_test)\n",
+            "model info": "[Training method: SVC.fit, Training line: 82]\n  [Testing method: BaseLibSVM.score, Testing line: 83]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 56,
+                    "explanation": "Scaling is applied to the entire dataset before the train-test split, allowing test data statistics to influence the scaling parameters used for training."
+                },
+                {
+                    "line_number": 69,
+                    "explanation": "PCA is applied to the full, scaled dataset before splitting, which allows the test data to affect the PCA components."
+                },
+                {
+                    "line_number": 78,
+                    "explanation": "The train-test split is performed after the data has been contaminated by preprocessing steps that used the entire dataset."
+                },
+                {
+                    "line_number": 82,
+                    "explanation": "The SVC model is trained on training data that has been preprocessed with information from the test set, leading to leakage."
+                },
+                {
+                    "line_number": 83,
+                    "explanation": "The model is evaluated on test data that was also transformed with information from the entire dataset."
+                }
+            ],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 43,
+                    "explanation": "A loop is used to perform data augmentation on the entire dataset before splitting, which contaminates the pool from which both training and test sets are drawn."
+                },
+                {
+                    "line_number": 47,
+                    "explanation": "The rotated image is inserted into the dataset prior to the train-test split, propagating augmented (and thus overlapping) samples into both sets."
+                },
+                {
+                    "line_number": 48,
+                    "explanation": "The label corresponding to the augmented sample is copied before splitting, ensuring that the modified data impacts both training and evaluation."
+                }
+            ]
+        }
+    ]
+}

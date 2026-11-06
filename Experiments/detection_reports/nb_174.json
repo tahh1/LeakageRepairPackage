@@ -1,0 +1,98 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "57 data = pd.read_csv('creditcard.csv')\n99 labels = data.iloc[:, (-1)]\n106 data = data.iloc[:, :-1]\n113 mean = data[['Time', 'Amount']].mean(axis=0)\n114 data[['Time', 'Amount']] -= mean\n116 std = data[['Time', 'Amount']].std(axis=0)\n117 data[['Time', 'Amount']] /= std\n129 mean = data.mean(axis=0)\n130 std = data.std(axis=0)\n132 data -= mean\n133 data /=  std\n139 data = np.asarray(data)\n163 train_data = data[:85118, :]\n164 train_labels = labels[:85118]\n166 val_data = data[85118:141863, :]\n167 val_labels = labels[85118:141863]\n179 model = models.Sequential()\n180 model.add(layers.Dense(30, activation='relu', input_shape=(train_data.shape\n    [1],)))\n181 model.add(layers.Dense(10, activation='relu'))\n182 model.add(layers.Dense(8, activation='relu'))\n183 model.add(layers.Dense(6, activation='relu'))\n184 model.add(layers.Dense(1, activation='sigmoid'))\n196 model.fit(train_data, train_labels, epochs=5, validation_data=(val_data,\n    val_labels), batch_size=32)\n",
+            "model info": "[Training method: model.fit, Training line: 196]\n  [Testing method: model.fit, Testing line: 196]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 113,
+                    "explanation": "Mean for features 'Time' and 'Amount' is computed on the full dataset, which includes both training and validation data."
+                },
+                {
+                    "line_number": 114,
+                    "explanation": "Data centering is performed on the full dataset using the computed mean."
+                },
+                {
+                    "line_number": 116,
+                    "explanation": "Standard deviation for features 'Time' and 'Amount' is computed on the full dataset."
+                },
+                {
+                    "line_number": 117,
+                    "explanation": "Scaling for features 'Time' and 'Amount' is applied using full dataset statistics, leaking validation data information into training."
+                },
+                {
+                    "line_number": 129,
+                    "explanation": "Overall mean for the entire dataset is computed after initial scaling, again using all data before splitting."
+                },
+                {
+                    "line_number": 130,
+                    "explanation": "Overall standard deviation is computed on the full dataset."
+                },
+                {
+                    "line_number": 132,
+                    "explanation": "Data centering is applied using computed overall mean, contaminating both training and validation splits."
+                },
+                {
+                    "line_number": 133,
+                    "explanation": "Data scaling is applied using computed overall standard deviation, incorporating validation data statistics."
+                },
+                {
+                    "line_number": 196,
+                    "explanation": "Model is trained using data that was preprocessed using the full dataset statistics, thus contaminating the validation data."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "57 data = pd.read_csv('creditcard.csv')\n99 labels = data.iloc[:, (-1)]\n106 data = data.iloc[:, :-1]\n113 mean = data[['Time', 'Amount']].mean(axis=0)\n114 data[['Time', 'Amount']] -= mean\n116 std = data[['Time', 'Amount']].std(axis=0)\n117 data[['Time', 'Amount']] /= std\n129 mean = data.mean(axis=0)\n130 std = data.std(axis=0)\n132 data -= mean\n133 data /=  std\n139 data = np.asarray(data)\n163 train_data = data[:85118, :]\n164 train_labels = labels[:85118]\n166 val_data = data[85118:141863, :]\n167 val_labels = labels[85118:141863]\n169 test_data = data[141863:, :]\n170 test_labels = labels[141863:]\n179 model = models.Sequential()\n180 model.add(layers.Dense(30, activation='relu', input_shape=(train_data.shape\n    [1],)))\n181 model.add(layers.Dense(10, activation='relu'))\n182 model.add(layers.Dense(8, activation='relu'))\n183 model.add(layers.Dense(6, activation='relu'))\n184 model.add(layers.Dense(1, activation='sigmoid'))\n196 model.fit(train_data, train_labels, epochs=5, validation_data=(val_data,\n    val_labels), batch_size=32)\n202 model.evaluate(test_data, test_labels)\n",
+            "model info": "[Training method: model.fit, Training line: 196]\n  [Testing method: model_0.evaluate, Testing line: 202]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 113,
+                    "explanation": "The mean for 'Time' and 'Amount' is computed on the entire dataset, which includes data that will later be in the test set."
+                },
+                {
+                    "line_number": 114,
+                    "explanation": "The subtraction of the mean from 'Time' and 'Amount' is applied on the full dataset, leaking test data information."
+                },
+                {
+                    "line_number": 116,
+                    "explanation": "The standard deviation is computed on the entire dataset, including future test data."
+                },
+                {
+                    "line_number": 117,
+                    "explanation": "Division by the computed standard deviation is applied to all data, contaminating subsequent splits."
+                },
+                {
+                    "line_number": 129,
+                    "explanation": "Recomputation of the mean on the full dataset further reinforces the leakage, as it incorporates test data statistics."
+                },
+                {
+                    "line_number": 130,
+                    "explanation": "Recomputation of the standard deviation on the full dataset uses test data information."
+                },
+                {
+                    "line_number": 132,
+                    "explanation": "Subtraction of the overall mean on the full dataset is done prior to splitting."
+                },
+                {
+                    "line_number": 133,
+                    "explanation": "Division by the overall standard deviation on the full dataset is applied, leaking test data characteristics."
+                },
+                {
+                    "line_number": 196,
+                    "explanation": "The model is trained on training data that was preprocessed using statistics from the entire dataset."
+                },
+                {
+                    "line_number": 202,
+                    "explanation": "The model is evaluated on test data that was scaled using leaky, full-dataset derived statistics."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

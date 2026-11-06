@@ -1,0 +1,21 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "13 iris = load_iris()\n14 X = pd.DataFrame(iris.data)\n15 X.columns = ['Sepal_Length', 'Sepal_Width', 'Petal_Length', 'Petal_Width']\n40 scaler = preprocessing.StandardScaler()\n41 scaler.fit(X)\n42 xsa = scaler.transform(X)\n43 xs = pd.DataFrame(xsa, columns=X.columns)\n45 gmm = GaussianMixture(n_components=3)\n46 gmm.fit(xs)\n47 y_cluster_gmm = gmm.predict(xs)\n",
+            "model info": "[Training method: GaussianMixture.fit, Training line: 46]\n  [Testing method: GaussianMixture.predict, Testing line: 47]",
+            "preproc_leakage_detected": false,
+            "preproc_leakage_lines": [],
+            "overlap_leakage_detected": true,
+            "overlap_leakage_lines": [
+                {
+                    "line_number": 46,
+                    "explanation": "GaussianMixture is fit on the entire preprocessed dataset, meaning the model is trained on all available data."
+                },
+                {
+                    "line_number": 47,
+                    "explanation": "The prediction is made on the exact same dataset used for training, causing overlap leakage."
+                }
+            ]
+        }
+    ]
+}

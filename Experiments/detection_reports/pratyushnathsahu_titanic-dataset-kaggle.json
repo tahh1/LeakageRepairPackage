@@ -1,0 +1,37 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "26 train_df = pd.read_csv('../input/train.csv')\n27 test_df = pd.read_csv('../input/test.csv')\n41 X = train_df.drop('Survived', axis=1)\n42 Y = train_df['Survived']\n48 combined_df = pd.concat([X, test_df])\n68 Age_imputer = SimpleImputer(strategy='median')\n70 Embarked_imputer = SimpleImputer(strategy='most_frequent')\n73 combined_df['Age'] = Age_imputer.fit_transform(combined_df[['Age']])\n74 combined_df['Fare'] = Age_imputer.fit_transform(combined_df[['Fare']])\n75 combined_df['Embarked'] = Embarked_imputer.fit_transform(combined_df[[\n    'Embarked']])\n87 combined_df['Family_size'] = combined_df['SibSp'] + combined_df['Parch'] + 1\n88 combined_df['Is_alone'] = int(0)\n95 combined_df['Title'] = combined_df['Name'].str.split(',', expand=True)[1\n    ].str.split('.', expand=True)[0]\n101 combined_df['Fare_bin'] = pd.qcut(combined_df['Fare'], 4)\n102 combined_df['Age_bin'] = pd.cut(combined_df['Age'].astype(int), 4)\n109 encoder = LabelEncoder()\n112 combined_df['Sex_encode'] = encoder.fit_transform(combined_df['Sex'])\n113 combined_df['Age_encode'] = encoder.fit_transform(combined_df['Age_bin'])\n114 combined_df['Fare_encode'] = encoder.fit_transform(combined_df['Fare_bin'])\n115 combined_df['Title_encode'] = encoder.fit_transform(combined_df['Title'])\n116 combined_df['Embarked_encode'] = encoder.fit_transform(combined_df['Embarked'])\n129 df_final = combined_df[['Pclass', 'Family_size', 'Is_alone', 'Sex_encode',\n    'Age_encode', 'Fare_encode', 'Embarked_encode']]\n130 X_train = df_final[0:891]\n131 X_test = df_final[891:]\n237 selected_model = svm.NuSVC(probability=True)\n238 selected_model.fit(X_train, Y)\n268 y_pred = selected_model.predict(X_test)\n",
+            "model info": "[Training method: NuSVC.fit, Training line: 238]\n  [Testing method: BaseLibSVM.predict, Testing line: 268]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 48,
+                    "explanation": "The training features and test data are concatenated into a single dataframe. This means that subsequent preprocessing steps will use information from the test set, leading to leakage."
+                },
+                {
+                    "line_number": 73,
+                    "explanation": "Imputation for 'Age' is performed on the combined dataset, causing the median computed to be influenced by test data."
+                },
+                {
+                    "line_number": 74,
+                    "explanation": "Imputation for 'Fare' is applied on the combined dataset, thereby incorporating test data information into the imputation statistics."
+                },
+                {
+                    "line_number": 101,
+                    "explanation": "Binning of 'Fare' is performed on the combined dataset, leaking test data distribution into the training preprocessing."
+                },
+                {
+                    "line_number": 238,
+                    "explanation": "The model is trained on data that has been preprocessed using statistics and transformations computed over both train and test sets."
+                },
+                {
+                    "line_number": 268,
+                    "explanation": "The model is evaluated on test data that was transformed with leaked information, affecting the reliability of the performance metrics."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}

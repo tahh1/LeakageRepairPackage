@@ -1,0 +1,58 @@
+{
+    "Model pairs with data leakage": [
+        {
+            "snippet": "23 data = pd.read_csv(os.path.join('../input', 'titanic.csv'), sep=',')\n81 data['name_title'] = data['name'].apply(lambda x: x.split(',')[1] if len(x.\n    split(',')) > 1 else x.split(',')[0]).apply(lambda x: x.split()[0])\n106 data['name_len'] = data['name'].apply(lambda x: len(x))\n199 def name(data):\n200 data['name_len'] = data['name'].apply(lambda x: len(x))\n201 data['name_title'] = data['name'].apply(lambda x: x.split(',')[1] if len(x.\n        split(',')) > 1 else x.split(',')[0]).apply(lambda x: x.split()[0])\n203 return data\n205 def age(data):\n206 data['age_flag'] = data['age'].apply(lambda x: 1 if pd.isnull(x) else 0)\n207 grouped_age = data.groupby(['name_title', 'pclass'])['age']\n208 data['age'] = grouped_age.transform(lambda x: x.fillna(data['age'].mean()) if\n        pd.isnull(x.mean()) else x.fillna(x.mean()))\n209 return data\n211 def embark(data):\n212 data['embarked'] = data['embarked'].fillna('Southampton')\n213 return data\n216 def dummies(data, columns=['pclass', 'name_title', 'embarked', 'sex']):\n217 for col in columns:\n218 data[col] = data[col].apply(lambda x: str(x))\n219 new_cols = [(col + '_' + i) for i in data[col].unique()]\n220 data = pd.concat([data, pd.get_dummies(data[col], prefix=col)[new_cols]],\n\t    axis=1)\n222 return data\n234 drop_columns = ['row.names', 'home.dest', 'room', 'ticket', 'boat']\n235 data = data.drop(drop_columns, axis=1)\n244 data = name(data)\n245 data = age(data)\n246 data = embark(data)\n247 data = dummies(data)\n260 trainX, testX, trainY, testY = train_test_split(data.iloc[:, 1:], data.iloc\n    [:, (0)], test_size=0.2, random_state=33)\n263 model = tree.DecisionTreeClassifier(criterion='entropy', max_depth=3,\n    min_samples_leaf=5)\n264 model.fit(trainX, trainY)\n289 y_pred = model.predict(testX)\n",
+            "model info": "[Training method: DecisionTreeClassifier.fit, Training line: 264]\n  [Testing method: DecisionTreeClassifier.predict, Testing line: 289]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 208,
+                    "explanation": "The age imputation uses the overall mean (from the full dataset) inside the group transformation before the train-test split, allowing future test statistics to influence training."
+                },
+                {
+                    "line_number": 247,
+                    "explanation": "Dummies encoding is applied to the entire dataset before the train-test split, causing test data information to leak into training."
+                },
+                {
+                    "line_number": 260,
+                    "explanation": "The train-test split is performed after applying all preprocessing transformations, meaning the training data is contaminated by test set characteristics."
+                },
+                {
+                    "line_number": 264,
+                    "explanation": "The model is trained on the contaminated training data which has been preprocessed using the entire dataset."
+                },
+                {
+                    "line_number": 289,
+                    "explanation": "The model is evaluated on the test data that comes from a dataset already transformed with leakage."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        },
+        {
+            "snippet": "23 data = pd.read_csv(os.path.join('../input', 'titanic.csv'), sep=',')\n81 data['name_title'] = data['name'].apply(lambda x: x.split(',')[1] if len(x.\n    split(',')) > 1 else x.split(',')[0]).apply(lambda x: x.split()[0])\n106 data['name_len'] = data['name'].apply(lambda x: len(x))\n199 def name(data):\n200 data['name_len'] = data['name'].apply(lambda x: len(x))\n201 data['name_title'] = data['name'].apply(lambda x: x.split(',')[1] if len(x.\n        split(',')) > 1 else x.split(',')[0]).apply(lambda x: x.split()[0])\n203 return data\n205 def age(data):\n206 data['age_flag'] = data['age'].apply(lambda x: 1 if pd.isnull(x) else 0)\n207 grouped_age = data.groupby(['name_title', 'pclass'])['age']\n208 data['age'] = grouped_age.transform(lambda x: x.fillna(data['age'].mean()) if\n        pd.isnull(x.mean()) else x.fillna(x.mean()))\n209 return data\n211 def embark(data):\n212 data['embarked'] = data['embarked'].fillna('Southampton')\n213 return data\n216 def dummies(data, columns=['pclass', 'name_title', 'embarked', 'sex']):\n217 for col in columns:\n218 data[col] = data[col].apply(lambda x: str(x))\n219 new_cols = [(col + '_' + i) for i in data[col].unique()]\n220 data = pd.concat([data, pd.get_dummies(data[col], prefix=col)[new_cols]],\n\t    axis=1)\n222 return data\n234 drop_columns = ['row.names', 'home.dest', 'room', 'ticket', 'boat']\n235 data = data.drop(drop_columns, axis=1)\n244 data = name(data)\n245 data = age(data)\n246 data = embark(data)\n247 data = dummies(data)\n260 trainX, testX, trainY, testY = train_test_split(data.iloc[:, 1:], data.iloc\n    [:, (0)], test_size=0.2, random_state=33)\n299 sub_columns = ['age', 'sex_male', 'sex_female']\n300 sub_trainX = trainX[sub_columns]\n301 sub_testX = testX[sub_columns]\n302 sub_model = tree.DecisionTreeClassifier(criterion='entropy', max_depth=3,\n    min_samples_leaf=5)\n303 sub_model.fit(sub_trainX, trainY)\n309 y_pred = sub_model.predict(sub_testX)\n",
+            "model info": "[Training method: DecisionTreeClassifier.fit, Training line: 303]\n  [Testing method: DecisionTreeClassifier.predict, Testing line: 309]",
+            "preproc_leakage_detected": true,
+            "preproc_leakage_lines": [
+                {
+                    "line_number": 247,
+                    "explanation": "Dummy variable encoding (and other feature engineering) is applied to the entire dataset before the train-test split, meaning that information from the later test set has influenced the transformation."
+                },
+                {
+                    "line_number": 260,
+                    "explanation": "The train-test split is performed after all preprocessing steps, so both training and test sets are derived from the globally transformed data."
+                },
+                {
+                    "line_number": 303,
+                    "explanation": "The model is trained on contaminated training data that has been preprocessed using global information from the full dataset."
+                },
+                {
+                    "line_number": 309,
+                    "explanation": "The evaluation on the test data is performed using data that has also been contaminated by preprocessing applied before splitting."
+                }
+            ],
+            "overlap_leakage_detected": false,
+            "overlap_leakage_lines": []
+        }
+    ]
+}
